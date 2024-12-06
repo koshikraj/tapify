@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Inter", sans-serif;
+}
+
+.fancy-box {
+  box-shadow: 0 1.125rem 5.5rem -0.25rem #40b66b4d,
+    0 0.5rem 1.75rem -0.375rem #40b66b2e;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #ff4e17, #ffffff, #b3b3b3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@layer base {
+  :root {
+    --background: 0, 0%, 0%;
+    --foreground: 0 0% 3.9%;
+    --card: 223 23% 6%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 223, 28%, 22%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 142, 48%, 48%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 224 12% 18%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --input: 223, 11%, 12%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Remove spinners in modern browsers */
+input[type="number"] {
+  appearance: textfield; /* Removes default browser styling */
+}
+
+/* For WebKit browsers (Chrome, Safari, Edge) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none; /* Removes spin buttons */
+  margin: 0; /* Removes any margin added by the browser */
+}
+
+/* For Firefox */
+input[type="number"] {
+  -moz-appearance: textfield; /* Removes spin buttons in Firefox */
+}
+
+input:focus {
+  outline: none; /* Removes the browser default outline */
+  box-shadow: none; /* Removes any box-shadow focus effects */
+}
