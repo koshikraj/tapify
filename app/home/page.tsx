@@ -346,35 +346,24 @@ export default function Page() {
                   <Plus size={12} /> Create Voucher
                 </button>
               </div>
-              <div className="flex flex-col flex-grow overflow-y-scroll divide-y divider-slate-500">
-                <div className="flex flex-row justify-between items-center py-2">
-                  <div className="flex flex-row justify-start items-center gap-4">
-                    <div className="flex flex-row justify-start items-center gap-1">
+              <div className="flex flex-col gap-0">
+                <div className="flex flex-row justify-between items-center border-b border-border pb-2 text-sm font-bold">
+                  <h3>Type</h3>
+                  <h3>Claimed</h3>
+                </div>
+                <div className="flex flex-col flex-grow overflow-y-scroll divide-y divider-slate-500">
+                  <div className="flex flex-row justify-between items-center py-2">
+                    <div className="flex flex-row justify-start items-center gap-2">
                       <Image
-                        src={tokenDetails[2]?.icon}
-                        alt="token"
-                        height={30}
-                        width={30}
+                        src={"/token.png"}
+                        alt="Logo"
+                        width={25}
+                        height={25}
                       />
-                      <h4 className="font-medium">{tokenDetails[2]?.name}</h4>
+                      <h4 className="font-medium">Token</h4>
                     </div>
-                    <Image
-                      src="/pacman.png"
-                      alt="Logo"
-                      width={20}
-                      height={20}
-                    />
-                    <div className="flex flex-row justify-start items-center gap-1">
-                      <Image
-                        src={tokenDetails[5]?.icon}
-                        alt="token"
-                        height={30}
-                        width={30}
-                      />
-                      <h4 className="font-medium">{tokenDetails[5]?.name}</h4>
-                    </div>{" "}
+                    <h5>10</h5>
                   </div>
-                  <div>0.00</div>
                 </div>
               </div>
             </TabsContent>
