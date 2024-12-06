@@ -19,7 +19,6 @@ import CopyString from "../utils/CopyString";
 import { useEffect, useState } from "react";
 import crypto from "crypto";
 
-
 import { getSmartAccountClient } from "../lib/permissionless";
 import { privateKeyToAccount } from "viem/accounts";
 import {
@@ -60,7 +59,11 @@ import { getJsonRpcProvider } from "../lib/web3";
 import { getChainById } from "../lib/tokens";
 import { buildTransferToken, fixDecimal, getTokenBalance } from "../lib/utils";
 import Loading from "../components/Loading";
-import { addVoucherData, getVoucherData, updateVoucherData } from "../lib/voucher-middleware";
+import {
+  addVoucherData,
+  getVoucherData,
+  updateVoucherData,
+} from "../lib/voucher-middleware";
 import { decryptMetadata, encryptMetadata } from "../lib/encryption";
 import useAccountStore from "../store/voucher/voucher.store";
 
@@ -69,11 +72,8 @@ export default function Page() {
   const { handleLogOut, primaryWallet, user } = useDynamicContext();
   // const { setVoucherSecret, voucherSecret } = useAccountStore();
 
-
   const searchParams = useSearchParams();
   const voucherSecret = searchParams.get("voucher") ?? "";
-  
-
 
   const [walletAddress, setWalletAddress] = useState<Address>(
     ZeroAddress as Address
@@ -93,11 +93,9 @@ export default function Page() {
   const chainId = 84532;
   // const chainId = 137
 
-  console.log(voucherSecret)
-
+  console.log(voucherSecret);
 
   useEffect(() => {
-
     (async () => {
       const account = await (primaryWallet as any)?.getWalletClient();
 
@@ -105,8 +103,7 @@ export default function Page() {
       // const encryptedData = encryptMetadata({creatorAddress: "as", sessionSecretKey: "asd", chainId: 12}, "asdasd")
       // console.log(decryptMetadata(encryptedData.encryptedMetadata, "asdasd"))
 
-  
-      console.log(await getVoucherData())
+      console.log(await getVoucherData());
 
       const accountClient = await getSmartAccountClient({
         signer: account,
@@ -121,27 +118,28 @@ export default function Page() {
     })();
   }, [primaryWallet]);
 
-
-
-async function sendAsset() {
+  async function sendAsset() {
     const provider = await getJsonRpcProvider(chainId.toString());
-    
+
     const txHash = await sendTransaction(
       chainId.toString(),
       [
         {
           to: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
           value: BigInt(0),
-          data: await buildTransferToken("0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238", "0xd8da6bf26964af9d7eed9e03e53415d37aa96045", parseUnits("1", 6), provider) as Hex,
+          data: (await buildTransferToken(
+            "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+            "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+            parseUnits("1", 6),
+            provider
+          )) as Hex,
         },
       ],
       account
     );
   }
 
-  
-
-async function enableSmartSession() {
+  async function enableSmartSession() {
     const calls: Transaction[] = [];
     const buildSmartSession = await buildSmartSessionModule(
       chainId.toString(),
@@ -153,55 +151,67 @@ async function enableSmartSession() {
 
     const sessionSecretKey = generateRandomPrivateKey();
     setSessionSecretKey(sessionSecretKey);
-    const sessionOwner =  getSessionValidatorAccount(sessionSecretKey)
-    console.log(sessionOwner.address)
-
+    const sessionOwner = getSessionValidatorAccount(sessionSecretKey);
+    console.log(sessionOwner.address);
 
     // Update amount
-    const SpendLimits = {token: getChainById(Number(chainId))?.tokens[1].address! as Address, amount: "3"}
-
+    const SpendLimits = {
+      token: getChainById(Number(chainId))?.tokens[1].address! as Address,
+      amount: "3",
+    };
 
     const enableSmartSession = await buildEnableSmartSession(
       chainId.toString(),
       sessionOwner.address,
-      SpendLimits,
+      SpendLimits
     );
     calls.push(enableSmartSession);
     // const allCalls: Transaction[] = calls.concat(autoSwap);
     // console.log(allCalls);
     const txHash = await sendTransaction(chainId.toString(), calls, account);
 
-    const encryptedData = encryptMetadata({creatorAddress: accountClient?.account?.address!, voucherDetails: { type: "basename"}, sessionSecretKey: sessionSecretKey, chainId}, voucherSecret)
+    const encryptedData = encryptMetadata(
+      {
+        creatorAddress: accountClient?.account?.address!,
+        voucherDetails: { type: "basename" },
+        sessionSecretKey: sessionSecretKey,
+        chainId,
+      },
+      voucherSecret
+    );
 
-    console.log(encryptedData)
+    console.log(encryptedData);
 
+    await addVoucherData(
+      encryptedData.voucherId,
+      encryptedData.encryptedMetadata,
+      encryptedData.status
+    );
 
-    await addVoucherData(encryptedData.voucherId, encryptedData.encryptedMetadata, encryptedData.status)
-    
-    console.log(decryptMetadata(encryptedData.encryptedMetadata, voucherSecret))
-
-
+    console.log(
+      decryptMetadata(encryptedData.encryptedMetadata, voucherSecret)
+    );
   }
 
-
-async function useSmartSession(type: 'basename' | 'token' | 'subscription') {
-
+  async function useSmartSession(type: "basename" | "token" | "subscription") {
     let call: Transaction;
     const provider = await getJsonRpcProvider(chainId.toString());
 
+    const sessionOwner = getSessionValidatorAccount(sessionSecretKey);
+    console.log(sessionOwner.address);
 
-    const sessionOwner =  getSessionValidatorAccount(sessionSecretKey)
-    console.log(sessionOwner.address)
-
-    
-    if(type == "subscription" || type == "token") {
-      
+    if (type == "subscription" || type == "token") {
       call = {
-      to: getChainById(Number(chainId))?.tokens[1].address!,
-      value: BigInt(0),
-      // Update to and amount
-      data: await buildTransferToken(getChainById(Number(chainId))?.tokens[1].address!, "0xd8da6bf26964af9d7eed9e03e53415d37aa96045", parseUnits("1", getChainById(Number(chainId))?.tokens[1].decimals), provider) as Hex,
-    }
+        to: getChainById(Number(chainId))?.tokens[1].address!,
+        value: BigInt(0),
+        // Update to and amount
+        data: (await buildTransferToken(
+          getChainById(Number(chainId))?.tokens[1].address!,
+          "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          parseUnits("1", getChainById(Number(chainId))?.tokens[1].decimals),
+          provider
+        )) as Hex,
+      };
     } else {
       call = await buildExecuteVoucher(chainId.toString());
     }
@@ -249,7 +259,6 @@ async function useSmartSession(type: 'basename' | 'token' | 'subscription') {
   }, [chainId, walletAddress]);
 
   useEffect(() => {
-
     if (!user) {
       router.push(`/?voucher=${voucherSecret}`);
     }
@@ -291,7 +300,6 @@ async function useSmartSession(type: 'basename' | 'token' | 'subscription') {
                   <TabsList className=" bg-transparent p-0 grid grid-cols-2 gap-2 w-fit">
                     <TabsTrigger
                       onClick={async () => {
-
                         await useSmartSession("basename");
                         // await sendAsset();
                       }}
@@ -578,6 +586,10 @@ async function useSmartSession(type: 'basename' | 'token' | 'subscription') {
                 </Select>
               </div>
             )}
+            <div className="flex flex-row justify-between items-center rounded-md p-4 text-white bg-border text-sm">
+              <h3>Total Amount</h3>
+              <h4 className="font-bold">0.001 ETH</h4>
+            </div>
 
             <button
               onClick={async () => {
@@ -585,7 +597,7 @@ async function useSmartSession(type: 'basename' | 'token' | 'subscription') {
                 await enableSmartSession();
                 setEnabling(false);
               }}
-              className="bg-red-200 text-red-600 flex flex-row justify-center items-center gap-4 w-full px-4 py-2.5 rounded-lg border-2 border-border font-semibold mt-4"
+              className="bg-red-200 text-red-600 flex flex-row justify-center items-center gap-4 w-full px-4 py-2.5 rounded-lg border-2 border-border font-semibold mt-2"
             >
               {enabling ? <Loading /> : "Create Voucher"}
             </button>
