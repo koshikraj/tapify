@@ -22,7 +22,7 @@ import crypto from "crypto";
 import { getSmartAccountClient } from "../lib/permissionless";
 import { privateKeyToAccount } from "viem/accounts";
 import {
-  buildExecuteVoucher,
+  buildExecuteBaseNameVoucher,
   buildEnableSmartSession,
   buildSmartSessionModule,
   buildUseSmartSession,
@@ -59,12 +59,8 @@ import { getJsonRpcProvider } from "../lib/web3";
 import { getChainById } from "../lib/tokens";
 import { buildTransferToken, fixDecimal, getTokenBalance } from "../lib/utils";
 import Loading from "../components/Loading";
-import {
-  addVoucherData,
-  getVoucherData,
-  updateVoucherData,
-} from "../lib/voucher-middleware";
-import { decryptMetadata, encryptMetadata } from "../lib/encryption";
+import { addVoucherData, getVoucherData, getVoucherDataById, updateVoucherData } from "../lib/voucher-middleware";
+import { decryptMetadata, deriveId, encryptMetadata, VoucherMetadata } from "../lib/encryption";
 import useAccountStore from "../store/voucher/voucher.store";
 
 export default function Page() {
@@ -81,7 +77,6 @@ export default function Page() {
   const [accountClient, setAccountClient] = useState<any>();
   const [account, setAccount] = useState<WalletClient>();
   const [showAutoSwap, setShowAutoSwap] = useState(false);
-  const [percentage, setPercentage] = useState(100);
   const [fromToken, setFromToken] = useState(2);
   const [toToken, setToToken] = useState(5);
   const [showTx, setShowTx] = useState(false);
@@ -89,6 +84,11 @@ export default function Page() {
   const [sessionSecretKey, setSessionSecretKey] = useState<Hex>("0x");
   const [tokenDetails, setTokenDetails]: any = useState([]);
   const [voucherType, setVoucherType] = useState(0);
+
+
+  // Voucher claim states
+  const [ voucherMetaData, setVoucherMetaData ] = useState<VoucherMetadata>();
+
 
   const chainId = 84532;
   // const chainId = 137
@@ -99,9 +99,18 @@ export default function Page() {
     (async () => {
       const account = await (primaryWallet as any)?.getWalletClient();
 
-      // Example usage
-      // const encryptedData = encryptMetadata({creatorAddress: "as", sessionSecretKey: "asd", chainId: 12}, "asdasd")
-      // console.log(decryptMetadata(encryptedData.encryptedMetadata, "asdasd"))
+
+
+      try {
+      const voucherData = await getVoucherDataById(deriveId(voucherSecret))
+      console.log(voucherData[0].encrypted_metadata)
+      setVoucherMetaData(decryptMetadata(voucherData[0].encrypted_metadata, voucherSecret))
+
+      }
+      catch {
+        console.log("Invalid Voucher")
+      }
+
 
       console.log(await getVoucherData());
 
@@ -170,17 +179,10 @@ export default function Page() {
     // console.log(allCalls);
     const txHash = await sendTransaction(chainId.toString(), calls, account);
 
-    const encryptedData = encryptMetadata(
-      {
-        creatorAddress: accountClient?.account?.address!,
-        voucherDetails: { type: "basename" },
-        sessionSecretKey: sessionSecretKey,
-        chainId,
-      },
-      voucherSecret
-    );
+    const encryptedData = encryptMetadata({creatorAddress: walletAddress, voucherDetails: { type: "basename"}, sessionSecretKey: sessionSecretKey, chainId}, voucherSecret)
 
-    console.log(encryptedData);
+    await addVoucherData(encryptedData.voucherId, encryptedData.encryptedMetadata, encryptedData.status)
+    
 
     await addVoucherData(
       encryptedData.voucherId,
@@ -193,39 +195,8 @@ export default function Page() {
     );
   }
 
-  async function useSmartSession(type: "basename" | "token" | "subscription") {
-    let call: Transaction;
-    const provider = await getJsonRpcProvider(chainId.toString());
 
-    const sessionOwner = getSessionValidatorAccount(sessionSecretKey);
-    console.log(sessionOwner.address);
 
-    if (type == "subscription" || type == "token") {
-      call = {
-        to: getChainById(Number(chainId))?.tokens[1].address!,
-        value: BigInt(0),
-        // Update to and amount
-        data: (await buildTransferToken(
-          getChainById(Number(chainId))?.tokens[1].address!,
-          "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
-          parseUnits("1", getChainById(Number(chainId))?.tokens[1].decimals),
-          provider
-        )) as Hex,
-      };
-    } else {
-      call = await buildExecuteVoucher(chainId.toString());
-    }
-
-    setShowTx(true);
-
-    const txHash = await sendSessionTransaction(
-      chainId.toString(),
-      [call],
-      walletAddress,
-      sessionOwner
-    );
-    setShowTx(false);
-  }
 
   useEffect(() => {
     (async () => {
@@ -300,7 +271,6 @@ export default function Page() {
                   <TabsList className=" bg-transparent p-0 grid grid-cols-2 gap-2 w-fit">
                     <TabsTrigger
                       onClick={async () => {
-                        await useSmartSession("basename");
                         // await sendAsset();
                       }}
                       className="data-[state=active]:bg-border data-[state=active]:text-white data-[state=active]:font-bold"

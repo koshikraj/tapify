@@ -310,7 +310,7 @@ export const sendSessionTransaction = async (chainId: string, calls: Transaction
 
 
 
-export const buildExecuteVoucher = async (chainId: string): Promise<Transaction> => {
+export const buildExecuteBaseNameVoucher = async (chainId: string, name: string, owner: Address): Promise<Transaction> => {
 
     
   const provider = await getJsonRpcProvider(chainId);
@@ -322,10 +322,10 @@ export const buildExecuteVoucher = async (chainId: string): Promise<Transaction>
   )
 
   const request = {
-    name: 'koshik12345',
-    owner: '0x958543756A4c7AC6fB361f0efBfeCD98E4D297Db',
+    name: name,
+    owner: owner,
     duration: BigInt(31536000), // One year in seconds
-    resolver: '0x6533C94869D28fAA8dF77cc63f9e2b2D6Cf77eBA',
+    resolver: '0x6533C94869D28fAA8dF77cc63f9e2b2D6Cf77eBA', // Update for mainnet
     data: [], // Empty bytes array
     reverseRecord: true
   };
