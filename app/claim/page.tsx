@@ -4,74 +4,96 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getVoucherDataById } from "../lib/voucher-middleware";
 import { decryptMetadata, deriveId, VoucherMetadata } from "../lib/encryption";
-import { buildExecuteBaseNameVoucher, getSessionValidatorAccount, isNameAvailable, sendSessionTransaction, Transaction } from "../lib/module";
+import {
+  buildExecuteBaseNameVoucher,
+  getSessionValidatorAccount,
+  isNameAvailable,
+  sendSessionTransaction,
+  Transaction,
+} from "../lib/module";
 import { getJsonRpcProvider } from "../lib/web3";
-import { Hex } from "viem";
+import { Address, Hex } from "viem";
 import { getChainById } from "../lib/tokens";
 import { buildTransferToken } from "../lib/utils";
 import { parseUnits } from "ethers";
+import { BadgeCheck, BadgeX, Check, X } from "lucide-react";
 
 export default function Page() {
-  
   const searchParams = useSearchParams();
   const voucherSecret = searchParams.get("voucher") ?? "";
 
   // Voucher claim states
-  const [ voucherMetaData, setVoucherMetaData ] = useState<VoucherMetadata>();
-  const [ voucherStatus, setVoucherStatus ] = useState<number>(1);
-  const [ baseName, setBaseName ] = useState<string>("");
+  const [voucherMetaData, setVoucherMetaData] = useState<VoucherMetadata>();
+  const [voucherStatus, setVoucherStatus] = useState<number>(1);
+  const [baseName, setBaseName] = useState<string>("");
+  const [ownerAddress, setOwnerAddress] = useState<string>("");
 
-
-
+  const [isNameAvail, setIsNameAvail] = useState<boolean>(false);
+  const [mintStatus, setMintStatus] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
-
-
-
       try {
-      const voucherData = await getVoucherDataById(deriveId(voucherSecret))
-      if(voucherData[0].status == "active") {
-      setVoucherMetaData(decryptMetadata(voucherData[0].encrypted_metadata, voucherSecret))
-      setVoucherStatus(2)
-      }
-      }
-      catch {
-        console.log("Invalid Voucher")
+        const voucherData = await getVoucherDataById(deriveId(voucherSecret));
+        if (voucherData[0].status == "active") {
+          setVoucherMetaData(
+            decryptMetadata(voucherData[0].encrypted_metadata, voucherSecret)
+          );
+          setVoucherStatus(2);
+        }
+      } catch {
+        console.log("Invalid Voucher");
       }
     })();
   }, []);
 
-  async function triggerSmartSession(type: 'basename' | 'token' | 'subscription' = 'basename') {
-
+  async function triggerSmartSession(
+    type: "basename" | "token" | "subscription" = "basename"
+  ) {
     let call: Transaction;
-    const provider = await getJsonRpcProvider(voucherMetaData!.chainId.toString());
+    const provider = await getJsonRpcProvider(
+      voucherMetaData!.chainId.toString()
+    );
+    setMintStatus(true);
+    const sessionOwner = getSessionValidatorAccount(
+      voucherMetaData!.sessionSecretKey as Hex
+    );
+    console.log(sessionOwner.address);
 
-    const sessionOwner =  getSessionValidatorAccount(voucherMetaData!.sessionSecretKey as Hex)
-    console.log(sessionOwner.address)
-
-    
-    if(type == "subscription" || type == "token") {
-      
+    if (type == "subscription" || type == "token") {
       call = {
-      to: getChainById(voucherMetaData!.chainId)?.tokens[1].address!,
-      value: BigInt(0),
-      // Update to and amount
-      data: await buildTransferToken(getChainById(voucherMetaData!.chainId)?.tokens[1].address!, "0xd8da6bf26964af9d7eed9e03e53415d37aa96045", parseUnits("1", getChainById(voucherMetaData!.chainId)?.tokens[1].decimals), provider) as Hex,
-    }
+        to: getChainById(voucherMetaData!.chainId)?.tokens[1].address!,
+        value: BigInt(0),
+        // Update to and amount
+        data: (await buildTransferToken(
+          getChainById(voucherMetaData!.chainId)?.tokens[1].address!,
+          "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          parseUnits(
+            "1",
+            getChainById(voucherMetaData!.chainId)?.tokens[1].decimals
+          ),
+          provider
+        )) as Hex,
+      };
     } else {
-      call = await buildExecuteBaseNameVoucher(voucherMetaData!.chainId.toString(), baseName, "0x958543756A4c7AC6fB361f0efBfeCD98E4D297Db");
+      call = await buildExecuteBaseNameVoucher(
+        voucherMetaData!.chainId.toString(),
+        baseName,
+        ownerAddress as Address
+      );
     }
 
     // setShowTx(true);
 
-    console.log(voucherMetaData!.creatorAddress)
+    console.log(voucherMetaData!.creatorAddress);
     const txHash = await sendSessionTransaction(
       voucherMetaData!.chainId.toString(),
       [call],
       voucherMetaData!.creatorAddress as Hex,
       sessionOwner
     );
+    setMintStatus(false);
+    setVoucherStatus(4);
     // setShowTx(false);
   }
 
@@ -79,7 +101,7 @@ export default function Page() {
   if (voucherStatus === 1) {
     return (
       <>
-        <h2 className="font-bold text-lg">Loading Voucher ...</h2>
+        <h2 className="font-bold text-lg">Validating Voucher</h2>
         <div className="flex flex-col justify-center items-center gap-2">
           <Image src="/tapify.gif" alt="Logo" width={80} height={80} />
         </div>
@@ -90,15 +112,66 @@ export default function Page() {
   if (voucherStatus === 2) {
     return (
       <>
-        <h2 className="font-bold text-lg" onClick={ ()=> { triggerSmartSession();}}>Claim Basename</h2>
-        <div>
-          <input
-            type="text"
-            placeholder="Enter basename"
-            value={baseName}
-            onChange={async (event)=> { setBaseName(event.target.value); console.log(await isNameAvailable(voucherMetaData!.chainId.toString(), event.target.value))}}
-            className="w-full bg-border border-input px-3 py-2 rounded-md"
-          />
+        <h2 className="font-bold text-lg">Claim Basename</h2>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col justify-start items-start gap-1">
+            <div className="w-full bg-border border-input px-3 py-2 rounded-md flex flex-row justify-between items-center">
+              <input
+                type="text"
+                placeholder="Enter basename"
+                value={baseName}
+                onChange={async (event) => {
+                  setBaseName(event.target.value.toLowerCase());
+                  const isAvailable = await isNameAvailable(
+                    voucherMetaData!.chainId.toString(),
+                    event.target.value
+                  );
+
+                  setIsNameAvail(isAvailable);
+                }}
+                className="bg-transparent w-full"
+              />
+              <div className="flex flex-row justify-center items-center gap-2 text-sm">
+                <span className="text-slate-400">.base.eth</span>
+                <div>
+                  {isNameAvail ? (
+                    <BadgeCheck className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <BadgeX className="w-5 h-5 text-red-600" />
+                  )}
+                </div>
+              </div>
+            </div>
+            {baseName.length <= 9 && (
+              <div className="text-xs text-red-600 px-3">
+                Basename must be at least 9 characters
+              </div>
+            )}
+          </div>
+          {isNameAvail && baseName.length > 9 && (
+            <input
+              type="text"
+              placeholder="Owner Address"
+              className="w-full bg-border border-input px-3 py-2 rounded-md"
+              onChange={(event) => {
+                setOwnerAddress(event.target.value);
+              }}
+            />
+          )}
+
+          <button
+            disabled={
+              !isNameAvail || baseName.length <= 9
+                ? true
+                : false || ownerAddress.length !== 42
+            }
+            className="px-6 py-2.5 bg-primary text-white w-full rounded-md shadow-md disabled:opacity-50 font-bold"
+            onClick={() => {
+              triggerSmartSession();
+            }}
+          >
+            {mintStatus ? "Claming..." : "Claim"}
+          </button>
         </div>
       </>
     );
