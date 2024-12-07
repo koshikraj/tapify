@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getVoucherDataById } from "../lib/voucher-middleware";
+import { getVoucherDataById, updateVoucherData } from "../lib/voucher-middleware";
 import { decryptMetadata, deriveId, VoucherMetadata } from "../lib/encryption";
 import {
   buildExecuteBaseNameVoucher,
@@ -24,6 +24,8 @@ export default function Page() {
 
   // Voucher claim states
   const [voucherMetaData, setVoucherMetaData] = useState<VoucherMetadata>();
+  const [voucherData, setVoucherData] = useState<any>();
+
   const [voucherStatus, setVoucherStatus] = useState<number>(1);
   const [baseName, setBaseName] = useState<string>("");
   const [ownerAddress, setOwnerAddress] = useState<string>("");
@@ -31,16 +33,25 @@ export default function Page() {
   const [isNameAvail, setIsNameAvail] = useState<boolean>(false);
   const [mintStatus, setMintStatus] = useState<boolean>(false);
 
+  console.log(voucherData)
   useEffect(() => {
     (async () => {
       try {
         const voucherData = await getVoucherDataById(deriveId(voucherSecret));
+        setVoucherData(voucherData[0]);
+
+
         if (voucherData[0].status == "active") {
+          const voucherMetaData = decryptMetadata(voucherData[0].encrypted_metadata, voucherSecret)
           setVoucherMetaData(
-            decryptMetadata(voucherData[0].encrypted_metadata, voucherSecret)
+            voucherMetaData
           );
-          setVoucherStatus(2);
+
+          if(voucherMetaData!.voucherDetails.type == "basename"){
+            setVoucherStatus(2);
+          }
         }
+
       } catch {
         console.log("Invalid Voucher");
       }
@@ -51,6 +62,7 @@ export default function Page() {
     type: "basename" | "token" | "subscription" = "basename"
   ) {
     let call: Transaction;
+    
     const provider = await getJsonRpcProvider(
       voucherMetaData!.chainId.toString()
     );
@@ -94,6 +106,9 @@ export default function Page() {
     );
     setMintStatus(false);
     setVoucherStatus(4);
+    console.log(voucherData.voucher_id)
+    await updateVoucherData(voucherData.voucher_id, voucherData.encrypted_metadata, 'redeemed', {type: 'basename', data: {name: baseName, address: ownerAddress}})
+
     // setShowTx(false);
   }
 

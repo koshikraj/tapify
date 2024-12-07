@@ -24,7 +24,7 @@ import { LibZip } from 'solady'
 import { Account, AccountType, Execution } from '@rhinestone/module-sdk'
 
 
-export const SMART_SESSIONS_ADDRESS = "0xD2e505fb615054527c2517a1719197ed13384485"
+export const SMART_SESSIONS_ADDRESS = "0x958543756A4c7AC6fB361f0efBfeCD98E4D297Db"
 
 export type Session = {
   sessionValidator: Address
@@ -95,7 +95,7 @@ export const getSessionNonce = async ({
   permissionId: Hex
 }) => {
 
-  console.log(abi)
+
   const newABi = [{
     type: 'function',
     name: 'getNonce',

@@ -11,7 +11,7 @@ export interface VoucherMetadata {
     creatorAddress: string;
     voucherDetails: {
       type: 'basename' | 'token' | 'subscription'
-      spendLimit?: number;
+      spendLimit?: string;
     };
     sessionSecretKey: string;
     chainId: number;

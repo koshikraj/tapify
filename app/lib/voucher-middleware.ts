@@ -37,13 +37,13 @@ export async function getVoucherData() {
   }
 
 
-  export async function updateVoucherData(voucher_id: string, encrypted_metadata: string, status: string) {
+  export async function updateVoucherData(voucher_id: string, encrypted_metadata: string, status: string, details: {}) {
     await fetch(`${SUPABASE_URL}/rest/v1/vouchers?voucher_id=eq.${voucher_id}`, {
     method: 'PATCH',
      headers: {
        'Content-Type': 'application/json',
        'apikey': process.env.NEXT_PUBLIC_SUPABASE_KEY!,
      },
-     body: JSON.stringify({ encrypted_metadata, status}),
+     body: JSON.stringify({ encrypted_metadata, status, details}),
    });
  }

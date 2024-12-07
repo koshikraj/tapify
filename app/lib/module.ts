@@ -24,30 +24,67 @@ import AutoSwapExecutor from "./abis/AutoSwapExecutor.json";
 import SpendingLimitPolicy from "./abis/SpendingLimitPolicy.json";
 import RegistrarController from "./abis/RegistrarController.json";
 import SessionValidator from "./abis/SessionValidator.json";
-import { computeConfigId, decodeSmartSessionSignature, encodeSmartSessionSignature, getActionId, Session, getEnableSessionsAction, getPermissionId, SMART_SESSIONS_ADDRESS } from "./smartsessions/smartsessions";
+import {  encodeSmartSessionSignature, Session, getEnableSessionsAction, getPermissionId, SMART_SESSIONS_ADDRESS } from "./smartsessions/smartsessions";
 import { SmartSessionModeType } from "./smartsessions/types";
 
 
 import {getChain, getSmartAccountClient } from "./permissionless";
-import { buildTransferToken, getRedeemBalance, getTokenDecimals, getVaultBalance, getVaultRedeemBalance, publicClient } from "./utils";
+import { buildTransferToken,  getTokenDecimals, publicClient } from "./utils";
 import { getPackedUserOperation } from "permissionless";
 import { getAccountNonce } from 'permissionless/actions'
 
 
 
-// export const webAuthnModule = "0xD990393C670dCcE8b4d8F858FB98c9912dBFAa06"
-// export const autoSwapExecutor = "0x0285F7b1bc7ef669f5F2554e8b0DaB0ab834Fc00"
-
-export const validatorAccount = "0xC70548d74f4A93a25b7d4754Bf536282971832c6"
 export const sessionValidator = OWNABLE_VALIDATOR_ADDRESS
 
-export const smartSession = SMART_SESSIONS_ADDRESS
-export const spendLimitPolicy = "0x640D5365171fF27E75EF97CE5863c439B77De1AB"
-export const uniActionPolicy = "0xF209D6e6C7b3781878bA61b1da2976f80E014815"
-export const sudoPolicy = "0x6a2246FbC8C61AE6F6f55f99C44A58933Fcf712d"
+
+// Define the type for chain constants
+interface ModuleAddresses {
+  smartSession: Address;
+  spendLimitPolicy: Address;
+  uniActionPolicy: Address;
+  sudoPolicy: Address;
+  registrarControllerAddress: Address;
+  resolverAddress: Address;
+}
 
 
-export const registrarControllerAddress = "0x49ae3cc2e3aa768b1e5654f5d3c6002144a59581"
+// Define a mapping for chain-specific constants
+const moduleAddresses: Record<number, ModuleAddresses>  = {
+  8453: { // Base Mainnet
+    smartSession: "0x771D0ac7E0B0E0B9D685FD38Fe332a1725c62BCC",
+    spendLimitPolicy: "0x6a2246FbC8C61AE6F6f55f99C44A58933Fcf712d",
+    uniActionPolicy: "0x142fc47AE4671aB8DA45d09Dd9349b7Dc15Da8C2",
+    sudoPolicy: "0xa445BD8a6eE29E410892910feA2cAb474CB21F92",
+    registrarControllerAddress: "0x4cCb0BB02FCABA27e82a56646E81d8c5bC4119a5",
+    resolverAddress: '0xC6d566A56A1aFf6508b41f6c90ff131615583BCD',
+
+  },
+  84532: { // Best Sepolia
+    smartSession: "0xD2e505fb615054527c2517a1719197ed13384485",
+    spendLimitPolicy: "0x640D5365171fF27E75EF97CE5863c439B77De1AB",
+    uniActionPolicy: "0xF209D6e6C7b3781878bA61b1da2976f80E014815",
+    sudoPolicy: "0x6a2246FbC8C61AE6F6f55f99C44A58933Fcf712d",
+    registrarControllerAddress: "0x49ae3cc2e3aa768b1e5654f5d3c6002144a59581",
+    resolverAddress: '0x6533C94869D28fAA8dF77cc63f9e2b2D6Cf77eBA',
+  },
+  97: { // BNB Smart chain testnet
+    smartSession: "0x452Fc62a63e46E5510D5251314b04d90A0b759A7",
+    spendLimitPolicy: "0xC03BE5520115A02B933B3d7DdC3978793D40EBD9",
+    uniActionPolicy: "0x2E2183563d1B7A7B39C4fd3824CB2Fc872dD8ec9",
+    sudoPolicy: "0x51db84D818e6b670f69296F2665638970B097269",
+    registrarControllerAddress: "0x49ae3cc2e3aa768b1e5654f5d3c6002144a59581",
+    resolverAddress: '0x6533C94869D28fAA8dF77cc63f9e2b2D6Cf77eBA',
+  },
+  // Add more chains as needed
+};
+
+
+// Function to get constants based on chain ID
+export const getModuleByChainId = (chainId: number) => {
+  return moduleAddresses[chainId] || moduleAddresses[8453]; // Default to Mainnet if chainId is not found
+}
+
 
 import { getChainId, signMessage as signMessageViem } from "viem/actions"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
@@ -88,6 +125,7 @@ export const getSpendPolicy = async (chainId: string, configId: string, token: A
 
 
   const provider = await getJsonRpcProvider(chainId)
+  const { spendLimitPolicy, smartSession } = getModuleByChainId(parseInt(chainId))
 
   const spendLimit = new Contract(
       spendLimitPolicy,
@@ -105,6 +143,8 @@ export const getRegisterPrice = async (chainId: string, name: string, duration: 
 
 
   const provider = await getJsonRpcProvider(chainId)
+  const { registrarControllerAddress } = getModuleByChainId(parseInt(chainId))
+
 
   const registrarController = new Contract(
     registrarControllerAddress,
@@ -121,6 +161,8 @@ export const isNameAvailable = async (chainId: string, name: string): Promise<an
 
 
   const provider = await getJsonRpcProvider(chainId)
+  const { registrarControllerAddress } = getModuleByChainId(parseInt(chainId))
+
 
   const registrarController = new Contract(
     registrarControllerAddress,
@@ -209,6 +251,8 @@ export const sendTransaction = async (chainId: string, calls: Transaction[], sig
   }): Promise<any> => {
 
 
+    const { smartSession } = getModuleByChainId(parseInt(chainId))
+
     const key = BigInt(pad(smartSession as Hex, {
         dir: "right",
         size: 24,
@@ -256,9 +300,8 @@ export const sendTransaction = async (chainId: string, calls: Transaction[], sig
 export const sendSessionTransaction = async (chainId: string, calls: Transaction[], safeAddress: Hex, sessionOwner: PrivateKeyAccount): Promise<any> => {
 
 
-  // const sessionSecretKey = generateRandomPrivateKey()
-
-
+  const { smartSession } = getModuleByChainId(parseInt(chainId))
+  
   const sessionDetails = await buildUseSmartSession(sessionOwner.address)
 
 
@@ -314,6 +357,8 @@ export const buildExecuteBaseNameVoucher = async (chainId: string, name: string,
 
     
   const provider = await getJsonRpcProvider(chainId);
+  const { registrarControllerAddress, resolverAddress } = getModuleByChainId(parseInt(chainId))
+
 
   const registrarController = new Contract(
       registrarControllerAddress,
@@ -325,7 +370,7 @@ export const buildExecuteBaseNameVoucher = async (chainId: string, name: string,
     name: name,
     owner: owner,
     duration: BigInt(31536000), // One year in seconds
-    resolver: '0x6533C94869D28fAA8dF77cc63f9e2b2D6Cf77eBA', // Update for mainnet
+    resolver: resolverAddress, // Update for mainnet
     data: [], // Empty bytes array
     reverseRecord: true
   };
@@ -342,28 +387,14 @@ export const buildExecuteBaseNameVoucher = async (chainId: string, name: string,
 
 export const buildSmartSessionModule = async (chainId: string, safeAddress: Address): Promise<Transaction | undefined> => {
 
-    
+  const { smartSession } = getModuleByChainId(parseInt(chainId))
+  
   if(!await isInstalled(parseInt(chainId), safeAddress, smartSession, "validator")){
     
     return await buildInstallModule(parseInt(chainId), safeAddress, smartSession, "validator", "0x" )
 
   }
 }
-
-
-
-// export const buildExecuteAutoSwap = async (token: Address, amount: bigint): Promise<Transaction> => {
-
-  
-//   const execCallData = new Interface(AutoSwapExecutor.abi).encodeFunctionData('autoSwap', [token, amount])
-
-//   return {
-//       to: autoSwapExecutor,
-//       value: BigInt(0),
-//       data: execCallData as Hex
-//   }
-// }
-
 
 
 export const buildUseSmartSession = async (validatorAddress: Address): Promise<{
@@ -396,20 +427,29 @@ export const buildUseSmartSession = async (validatorAddress: Address): Promise<{
 
 
 
-export const buildEnableSmartSession = async (chainId: string, validatorAddress: Address, tokenLimits: {token: Address, amount: string}): Promise<Transaction> => {
+export const buildEnableSmartSession = async (chainId: string, validatorAddress: Address, type: string, tokenLimits?: {token: Address, amount: string}): Promise<Transaction> => {
 
     
         const provider = await getJsonRpcProvider(chainId);
-        const execCallSelector = toFunctionSelector({
-          name: 'transfer',
-          type: 'function',
-          inputs: [{ name: 'to', type: 'address' }, { name: 'value', type: 'uint256' }],
-          outputs: [],
-          stateMutability: 'view',
-        })
+        const { spendLimitPolicy, sudoPolicy, registrarControllerAddress, smartSession } = getModuleByChainId(parseInt(chainId))
 
+        let smartSessionAction: ActionData;
 
         const validator = getSessionValidatorDetails(validatorAddress)
+
+        if(tokenLimits && type=="token") {
+
+          console.log("token")
+          console.log(tokenLimits)
+          
+
+          const execCallSelector = toFunctionSelector({
+            name: 'transfer',
+            type: 'function',
+            inputs: [{ name: 'to', type: 'address' }, { name: 'value', type: 'uint256' }],
+            outputs: [],
+            stateMutability: 'view',
+          })
         const spendingLimitsPolicy = getSpendingLimitsPolicy([
           {
               token: tokenLimits.token,
@@ -417,23 +457,26 @@ export const buildEnableSmartSession = async (chainId: string, validatorAddress:
           },
       ]);
 
-        const spendLimitAction = {
+         smartSessionAction = {
           actionTarget: tokenLimits.token as Hex, // an address as the target of the session execution
           actionTargetSelector: execCallSelector as Hex, // function selector to be used in the execution, in this case no function selector is used
           actionPolicies: [{policy: spendLimitPolicy as Hex, initData: spendingLimitsPolicy.initData}], 
         }
 
-        // Define the function signature
-        const registerFunctionSignature = 'register((string,address,uint256,address,bytes[],bool))';
-        // Get the function selector
-        const registerFunctionSelector = toFunctionSelector(registerFunctionSignature);
+       }
+       else {
+            // Define the function signature
+            const registerFunctionSignature = 'register((string,address,uint256,address,bytes[],bool))';
+            // Get the function selector
+            const registerFunctionSelector = toFunctionSelector(registerFunctionSignature);
+    
+            smartSessionAction = {
+              actionTarget: registrarControllerAddress as Hex, // an address as the target of the session execution
+              actionTargetSelector: registerFunctionSelector as Hex, // function selector to be used in the execution, in this case no function selector is used
+              actionPolicies: [{policy: sudoPolicy as Hex, initData: '0x' as Hex}], 
+            }
 
-        const uniSelectorAction = {
-          actionTarget: registrarControllerAddress as Hex, // an address as the target of the session execution
-          actionTargetSelector: registerFunctionSelector as Hex, // function selector to be used in the execution, in this case no function selector is used
-          actionPolicies: [{policy: sudoPolicy as Hex, initData: '0x' as Hex}], 
-        }
-
+       }
         const session: Session = {
           sessionValidator: validator.address,
           sessionValidatorInitData: validator.initData,
@@ -444,7 +487,7 @@ export const buildEnableSmartSession = async (chainId: string, validatorAddress:
             erc1271Policies: [],
           },
           actions: [
-            uniSelectorAction,
+            smartSessionAction,
           ],
           canUsePaymaster: true,
         }
@@ -452,7 +495,7 @@ export const buildEnableSmartSession = async (chainId: string, validatorAddress:
         const action = getEnableSessionsAction({ sessions: [session]})
 
   return {
-      to: action.to,
+      to: smartSession,
       value: BigInt(0),
       data: action.data
   }

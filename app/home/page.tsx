@@ -83,15 +83,17 @@ export default function Page() {
   const [enabling, setEnabling] = useState(false);
   const [sessionSecretKey, setSessionSecretKey] = useState<Hex>("0x");
   const [tokenDetails, setTokenDetails]: any = useState([]);
-  const [voucherType, setVoucherType] = useState(0);
+  const [voucherType, setVoucherType] = useState<"basename"|"token"|"subscription">("basename");
+  const [tokenAmount, setTokenAmount] = useState<string>("0");
 
+  console.log(voucherType)
 
   // Voucher claim states
   const [ voucherMetaData, setVoucherMetaData ] = useState<VoucherMetadata>();
 
 
   const chainId = 84532;
-  // const chainId = 137
+  // const chainId = 97
 
   console.log(voucherSecret);
 
@@ -148,7 +150,51 @@ export default function Page() {
     );
   }
 
-  async function enableSmartSession() {
+  async function triggerSmartSession(
+    type: "basename" | "token" | "subscription" = "basename"
+  ) {
+    let call: Transaction;
+    
+    const provider = await getJsonRpcProvider(
+      chainId.toString()
+    );
+    setShowTx(true);
+    const sessionOwner = getSessionValidatorAccount(
+      sessionSecretKey as Hex
+    );
+    console.log(sessionOwner.address);
+
+    // if (type == "subscription" || type == "token") {
+      call = {
+        to: getChainById(chainId)?.tokens[1].address!,
+        value: BigInt(0),
+        // Update to and amount
+        data: (await buildTransferToken(
+          getChainById(chainId)?.tokens[1].address!,
+          "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          parseUnits(
+            "2",
+            getChainById(chainId)?.tokens[1].decimals
+          ),
+          provider
+        )) as Hex,
+      };
+    // } 
+        // setShowTx(true);
+
+        const txHash = await sendSessionTransaction(
+          chainId.toString(),
+          [call],
+          walletAddress as Hex,
+          sessionOwner
+        );
+    
+        setShowTx(false);
+      }
+    
+
+
+  async function enableSmartSession(type: "basename" | "token" | "subscription" = "basename") {
     const calls: Transaction[] = [];
     const buildSmartSession = await buildSmartSessionModule(
       chainId.toString(),
@@ -161,17 +207,17 @@ export default function Page() {
     const sessionSecretKey = generateRandomPrivateKey();
     setSessionSecretKey(sessionSecretKey);
     const sessionOwner = getSessionValidatorAccount(sessionSecretKey);
-    console.log(sessionOwner.address);
 
     // Update amount
     const SpendLimits = {
       token: getChainById(Number(chainId))?.tokens[1].address! as Address,
-      amount: "3",
+      amount: tokenAmount,
     };
 
     const enableSmartSession = await buildEnableSmartSession(
       chainId.toString(),
       sessionOwner.address,
+      type,
       SpendLimits
     );
     calls.push(enableSmartSession);
@@ -179,7 +225,7 @@ export default function Page() {
     // console.log(allCalls);
     const txHash = await sendTransaction(chainId.toString(), calls, account);
 
-    const encryptedData = encryptMetadata({creatorAddress: walletAddress, voucherDetails: { type: "basename"}, sessionSecretKey: sessionSecretKey, chainId}, voucherSecret)
+    const encryptedData = encryptMetadata({creatorAddress: walletAddress, voucherDetails: { type: voucherType, spendLimit: tokenAmount }, sessionSecretKey: sessionSecretKey, chainId}, voucherSecret)
 
     await addVoucherData(encryptedData.voucherId, encryptedData.encryptedMetadata, encryptedData.status)
     
@@ -194,8 +240,6 @@ export default function Page() {
       decryptMetadata(encryptedData.encryptedMetadata, voucherSecret)
     );
   }
-
-
 
 
   useEffect(() => {
@@ -271,7 +315,7 @@ export default function Page() {
                   <TabsList className=" bg-transparent p-0 grid grid-cols-2 gap-2 w-fit">
                     <TabsTrigger
                       onClick={async () => {
-                        // await sendAsset();
+                        await triggerSmartSession();
                       }}
                       className="data-[state=active]:bg-border data-[state=active]:text-white data-[state=active]:font-bold"
                       value="holdings"
@@ -398,14 +442,14 @@ export default function Page() {
                 Select Voucher Type
               </label>
               <Select
-                value={voucherType.toString()}
-                onValueChange={(e) => setVoucherType(parseInt(e))}
+                value={voucherType}
+                onValueChange={(e: any) => setVoucherType(e)}
               >
                 <SelectTrigger className="w-full bg-border focus:outline-none focus:ring-0">
                   <SelectValue placeholder="Vocher Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">
+                  <SelectItem value="basename">
                     <div className="flex flex-row justify-center items-center gap-2">
                       <Image
                         src={"/basename.png"}
@@ -416,7 +460,7 @@ export default function Page() {
                       <div>Basename</div>
                     </div>
                   </SelectItem>
-                  <SelectItem value="1">
+                  <SelectItem value="token">
                     <div className="flex flex-row justify-center items-center gap-2">
                       <Image
                         src={"/token.png"}
@@ -427,7 +471,7 @@ export default function Page() {
                       <div>Token</div>
                     </div>
                   </SelectItem>
-                  <SelectItem value="2">
+                  <SelectItem value="subscription">
                     <div className="flex flex-row justify-center items-center gap-2">
                       <Image
                         src={"/subscription.png"}
@@ -441,7 +485,7 @@ export default function Page() {
                 </SelectContent>
               </Select>
             </div>
-            {voucherType === 0 ? (
+            {voucherType === "basename" ? (
               <div className="flex flex-col gap-2 w-full">
                 <label className="text-sm" htmlFor="">
                   Range of Letters
@@ -487,7 +531,7 @@ export default function Page() {
                   </SelectContent>
                 </Select>
               </div>
-            ) : voucherType === 1 ? (
+            ) : voucherType === "token" ? (
               <div className="flex flex-col gap-2 w-full">
                 <label className="text-sm" htmlFor="">
                   USDC Amount
@@ -495,6 +539,8 @@ export default function Page() {
                 <input
                   className="bg-border border-input px-3 py-2 rounded-md"
                   type="text"
+                  value={tokenAmount}
+                  onChange={(e)=>{ setTokenAmount(e.target.value)}}
                   placeholder="Enter USDC amount"
                 />
               </div>
@@ -553,7 +599,7 @@ export default function Page() {
             <button
               onClick={async () => {
                 setEnabling(true);
-                await enableSmartSession();
+                await enableSmartSession("token");
                 setEnabling(false);
               }}
               className="bg-red-200 text-red-600 flex flex-row justify-center items-center gap-4 w-full px-4 py-2.5 rounded-lg border-2 border-border font-semibold mt-2"

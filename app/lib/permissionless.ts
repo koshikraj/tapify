@@ -1,6 +1,6 @@
 import { Hex, createPublicClient, http, Chain, Transport, Address, defineChain } from 'viem'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
-import { base, polygon, baseSepolia, sepolia } from 'viem/chains'
+import { base, polygon, baseSepolia, sepolia, bscTestnet, bsc } from 'viem/chains'
 import { entryPoint07Address } from "viem/account-abstraction"
 
 
@@ -47,7 +47,7 @@ import { MOCK_ATTESTER_ADDRESS, RHINESTONE_ATTESTER_ADDRESS } from '@rhinestone/
 
 
   export const getChain = (chainId: string) : Chain => {
-    return [base, polygon, polygonsandbox, sepolia, baseSepolia].find((chain: any) => chain.id == chainId) as Chain;
+    return [base, polygon, polygonsandbox, sepolia, baseSepolia, bscTestnet, bsc ].find((chain: any) => chain.id == chainId) as Chain;
   }
   
 
@@ -86,6 +86,7 @@ interface SmartAccountClientParams {
 export const getSmartAccountClient = async ( { chainId, nonceKey, signer, address, signUserOperation, getDummySignature  } : SmartAccountClientParams ) => {
 
   const chain = getChain(chainId)
+  console.log(chain)
 
   // account.signUserOperation = signUserOperation ?? account.signUserOperation
   // account.getDummySignature = getDummySignature ?? account.getDummySignature
@@ -112,7 +113,7 @@ export const getSmartAccountClient = async ( { chainId, nonceKey, signer, addres
     // safe4337ModuleAddress: "0x7579EE8307284F293B1927136486880611F20002",
     // erc7579LaunchpadAddress: "0x7579011aB74c46090561ea277Ba79D510c6C00ff",
     safe4337ModuleAddress: "0xa58dc7a5f2ee725e71bb2c3586a12def64302c38", // With Mock registry
-    erc7579LaunchpadAddress: "0x4db50a676c90cdcfaabdbf7e8d36ac4f982eb044",  // With Mock registry
+    erc7579LaunchpadAddress: "0xC8412133AD29dF0748aF21B0c75192895d040fB6",  // With Mock registry
     attesters: [
 
       "0x958543756A4c7AC6fB361f0efBfeCD98E4D297Db", // ZenGuard Attester - only for test modules

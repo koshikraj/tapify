@@ -73,6 +73,30 @@ export const networks = {
     easExplorer: "",
   },
 
+  bsctestnet: {
+    name: 'BNB Smart Chain Testnet',
+    type: 'testnet',
+    chainId: 97,
+    url: `https://bnb-testnet.g.alchemy.com/v2/Zs890Y4JuSC19mPxz5HAoOCuRegcBoDH`,
+    bundler: `https://api.pimlico.io/v2/binance-testnet/rpc?apikey=${process.env.NEXT_PUBLIC_PIMLICO_API_KEY}`,
+    blockExplorer: "https://sepolia.basescan.org",
+    safeService: "https://safe-transaction-base-sepolia.safe.global",
+    api: `https://api-sepolia.etherscan.io/api?apikey=${ETHERSCAN_API_KEY}`,
+    easExplorer: "https://base-sepolia.easscan.org/attestation/view/",
+  },
+
+  bsc: {
+    name: 'BNB Smart Chain',
+    type: 'mainnet',
+    chainId: 56,
+    url: `https://bnb-mainnet.g.alchemy.com/v2/Zs890Y4JuSC19mPxz5HAoOCuRegcBoDH`,
+    bundler: `https://api.pimlico.io/v2/binance/rpc?apikey=${process.env.NEXT_PUBLIC_PIMLICO_API_KEY}`,
+    blockExplorer: "https://basescan.org",
+    safeService: "https://safe-transaction-base.safe.global",
+    api: `https://api-goerli.etherscan.io/api?apikey=${ETHERSCAN_API_KEY}`,
+    easExplorer: "",
+  },
+
 
   basesandbox: {
     name: 'Base',
