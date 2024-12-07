@@ -599,7 +599,7 @@ export default function Page() {
             <button
               onClick={async () => {
                 setEnabling(true);
-                await enableSmartSession("token");
+                await enableSmartSession(voucherType);
                 setEnabling(false);
               }}
               className="bg-red-200 text-red-600 flex flex-row justify-center items-center gap-4 w-full px-4 py-2.5 rounded-lg border-2 border-border font-semibold mt-2"

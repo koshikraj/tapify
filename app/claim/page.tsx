@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getVoucherDataById, updateVoucherData } from "../lib/voucher-middleware";
 import { decryptMetadata, deriveId, VoucherMetadata } from "../lib/encryption";
@@ -23,6 +23,8 @@ import { useWindowSize } from "@react-hook/window-size";
 import { BanIcon } from "../components/Icons/BanIcon";
 
 export default function Page() {
+
+  const router = useRouter();
   const searchParams = useSearchParams();
   const voucherSecret = searchParams.get("voucher") ?? "";
   const [width, height] = useWindowSize();
@@ -46,8 +48,9 @@ export default function Page() {
         setVoucherData(voucherData[0]);
 
 
+        const voucherMetaData = decryptMetadata(voucherData[0].encrypted_metadata, voucherSecret)
+
         if (voucherData[0].status == "active") {
-          const voucherMetaData = decryptMetadata(voucherData[0].encrypted_metadata, voucherSecret)
           setVoucherMetaData(
             voucherMetaData
           );
@@ -55,8 +58,16 @@ export default function Page() {
           if(voucherMetaData!.voucherDetails.type == "basename"){
             setVoucherStatus(2);
           }
+          else if(voucherMetaData!.voucherDetails.type == "token"){
+            setVoucherStatus(3);
+          }
         }
 
+        else if (voucherData[0].status == "redeemed") {
+          if(voucherMetaData!.voucherDetails.type == "basename"){
+            router.push(`/profile?address=${voucherData[0].details["data"]["address"]}`)
+          }
+        }
       } catch {
         console.log("Invalid Voucher");
       }
@@ -206,7 +217,7 @@ export default function Page() {
   if (voucherStatus === 3) {
     return (
       <>
-        <h2 className="font-bold text-lg"> Profile</h2>
+        <h2 className="font-bold text-lg"> Token</h2>
       </>
     );
   }
