@@ -61,19 +61,7 @@ export interface Transaction {
   data: Hex;
 }
 
-// export const getWebAuthnModule = async (validator: any) => {
 
-  
-//   return { address: webAuthnModule as Address,
-//      context: await validator.getEnableData()}
-
-// }
-
-export const getDetails = async (): Promise<{ address: Address }> => {
-  // Replace with your logic to retrieve the address
-  const address = "0x8D4Bd3f21CfE07FeDe4320F1DA44F5d5d9b9952C"; // Example address
-  return { address };
-}
 
 export const generateRandomPrivateKey = (): Hex => {
   return generatePrivateKey(); // Convert to hex string and prepend '0x'
@@ -81,7 +69,6 @@ export const generateRandomPrivateKey = (): Hex => {
 
 export const getSessionValidatorAccount =  (sessionPKey: Hex): PrivateKeyAccount => {
 
-  // const validator = privateKeyToAccount("0x47cfffe655129fa5bce61a8421eb6ea97ec6d5609b5fbea45ad68bacede19d8b")
   const validator = privateKeyToAccount(sessionPKey)
   return validator;
 
@@ -95,8 +82,6 @@ export  function getSessionValidatorDetails(validatorAccount: Hex) {
       owners: [validatorAccount],
       })}
 }
-
-
 
 
 export const getSpendPolicy = async (chainId: string, configId: string, token: Address, account: Address): Promise<any> => {
@@ -130,6 +115,21 @@ export const getRegisterPrice = async (chainId: string, name: string, duration: 
   const sesionData = await registrarController.registerPrice(name, duration);
   console.log(sesionData)
   return sesionData;
+}
+
+export const isNameAvailable = async (chainId: string, name: string): Promise<any> => {
+
+
+  const provider = await getJsonRpcProvider(chainId)
+
+  const registrarController = new Contract(
+    registrarControllerAddress,
+      RegistrarController,
+      provider
+  )
+
+  const available = await registrarController.available(name);
+  return available;
 }
 
 

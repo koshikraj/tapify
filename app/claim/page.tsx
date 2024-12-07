@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getVoucherDataById } from "../lib/voucher-middleware";
 import { decryptMetadata, deriveId, VoucherMetadata } from "../lib/encryption";
-import { buildExecuteBaseNameVoucher, getSessionValidatorAccount, sendSessionTransaction, Transaction } from "../lib/module";
+import { buildExecuteBaseNameVoucher, getSessionValidatorAccount, isNameAvailable, sendSessionTransaction, Transaction } from "../lib/module";
 import { getJsonRpcProvider } from "../lib/web3";
 import { Hex } from "viem";
 import { getChainById } from "../lib/tokens";
@@ -97,7 +97,7 @@ export default function Page({ params }: { params: { secret: string } }) {
             type="text"
             placeholder="Enter basename"
             value={baseName}
-            onChange={(event)=> { setBaseName(event.target.value)}}
+            onChange={async (event)=> { setBaseName(event.target.value); console.log(await isNameAvailable(voucherMetaData!.chainId.toString(), event.target.value))}}
             className="w-full bg-border border-input px-3 py-2 rounded-md"
           />
         </div>
