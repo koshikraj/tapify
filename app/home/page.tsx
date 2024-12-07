@@ -70,8 +70,7 @@ import {
   encryptMetadata,
   VoucherMetadata,
 } from "../lib/encryption";
-import useAccountStore from "../store/voucher/voucher.store";
-import { Truncate } from "../utils/truncate";
+import { Truncate } from "../utils/Truncate";
 
 export default function Page() {
   const router = useRouter();

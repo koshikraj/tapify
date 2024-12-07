@@ -1,9 +1,10 @@
 "use client";
 import Image from "next/image";
-import { Truncate } from "../utils/truncate";
+
 import { ClipboardCopy, Copy, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import CopyString from "../utils/CopyString";
+import { Truncate } from "../utils/Truncate";
 export default function Page() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-white w-full">
