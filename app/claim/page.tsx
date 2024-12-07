@@ -191,7 +191,7 @@ export default function Page() {
   if (voucherStatus === 3) {
     return (
       <>
-        <h2 className="font-bold text-lg"> Claim Claim Data</h2>
+        <h2 className="font-bold text-lg"> Profile</h2>
       </>
     );
   }
