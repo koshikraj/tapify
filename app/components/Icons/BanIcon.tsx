@@ -51,6 +51,13 @@ const BanIcon = () => {
         controls.start("animate");
         controls.start("slash", { delay: 0.5 });
       }}
+      onMouseEnter={() => {
+        controls.start("animate");
+        controls.start("slash", { delay: 0.5 });
+      }}
+      onMouseLeave={() => {
+        controls.start("normal");
+      }}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

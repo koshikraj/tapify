@@ -12,9 +12,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 const SocialSignIn = () => {
-
-  
-
   const { error, signInWithSocialAccount } = useSocialAccounts();
 
   return (
@@ -58,7 +55,6 @@ const LoggedInUser = () => {
   const searchParams = useSearchParams();
   const voucherSecret = searchParams.get("voucher") ?? "";
 
-
   useEffect(() => {
     if (user) {
       router.push(`/home?voucher=${voucherSecret}`);
@@ -66,7 +62,13 @@ const LoggedInUser = () => {
   }, [router, user]);
   return (
     <div className="flex justify-center items-center w-full">
-      <Image src="/tapify.gif" alt="Logo" width={50} height={50} />
+      <Image
+        className="animate-ping"
+        src="/tapify.svg"
+        alt="Logo"
+        width={50}
+        height={50}
+      />
     </div>
   );
 };

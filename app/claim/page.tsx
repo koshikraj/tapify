@@ -2,7 +2,10 @@
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getVoucherDataById, updateVoucherData } from "../lib/voucher-middleware";
+import {
+  getVoucherDataById,
+  updateVoucherData,
+} from "../lib/voucher-middleware";
 import { decryptMetadata, deriveId, VoucherMetadata } from "../lib/encryption";
 import {
   buildExecuteBaseNameVoucher,
@@ -21,9 +24,9 @@ import { CircleCheckIcon } from "../components/Icons/CircleCheckIcon";
 import Confetti from "react-confetti";
 import { useWindowSize } from "@react-hook/window-size";
 import { BanIcon } from "../components/Icons/BanIcon";
+import Link from "next/link";
 
 export default function Page() {
-
   const router = useRouter();
   const searchParams = useSearchParams();
   const voucherSecret = searchParams.get("voucher") ?? "";
@@ -40,32 +43,32 @@ export default function Page() {
   const [mintStatus, setMintStatus] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  console.log(voucherData)
+  console.log(voucherData);
   useEffect(() => {
     (async () => {
       try {
         const voucherData = await getVoucherDataById(deriveId(voucherSecret));
         setVoucherData(voucherData[0]);
 
-
-        const voucherMetaData = decryptMetadata(voucherData[0].encrypted_metadata, voucherSecret)
+        const voucherMetaData = decryptMetadata(
+          voucherData[0].encrypted_metadata,
+          voucherSecret
+        );
 
         if (voucherData[0].status == "active") {
-          setVoucherMetaData(
-            voucherMetaData
-          );
+          setVoucherMetaData(voucherMetaData);
 
-          if(voucherMetaData!.voucherDetails.type == "basename"){
+          if (voucherMetaData!.voucherDetails.type == "basename") {
             setVoucherStatus(2);
+          } else if (voucherMetaData!.voucherDetails.type == "token") {
+            console.log(voucherMetaData);
+            setVoucherStatus(5);
           }
-          else if(voucherMetaData!.voucherDetails.type == "token"){
-            setVoucherStatus(3);
-          }
-        }
-
-        else if (voucherData[0].status == "redeemed") {
-          if(voucherMetaData!.voucherDetails.type == "basename"){
-            router.push(`/profile?address=${voucherData[0].details["data"]["address"]}`)
+        } else if (voucherData[0].status == "redeemed") {
+          if (voucherMetaData!.voucherDetails.type == "basename") {
+            router.push(
+              `/profile?address=${voucherData[0].details["data"]["address"]}`
+            );
           }
         }
       } catch {
@@ -78,7 +81,7 @@ export default function Page() {
     type: "basename" | "token" | "subscription" = "basename"
   ) {
     let call: Transaction;
-    
+
     const provider = await getJsonRpcProvider(
       voucherMetaData!.chainId.toString()
     );
@@ -122,8 +125,13 @@ export default function Page() {
     );
     setMintStatus(false);
     setVoucherStatus(4);
-    console.log(voucherData.voucher_id)
-    await updateVoucherData(voucherData.voucher_id, voucherData.encrypted_metadata, 'redeemed', {type: 'basename', data: {name: baseName, address: ownerAddress}})
+    console.log(voucherData.voucher_id);
+    await updateVoucherData(
+      voucherData.voucher_id,
+      voucherData.encrypted_metadata,
+      "redeemed",
+      { type: "basename", data: { name: baseName, address: ownerAddress } }
+    );
 
     // setShowTx(false);
   }
@@ -134,7 +142,13 @@ export default function Page() {
       <>
         <h2 className="font-bold text-lg">Validating Voucher</h2>
         <div className="flex flex-col justify-center items-center gap-2">
-          <Image src="/tapify.gif" alt="Logo" width={80} height={80} />
+          <Image
+            className="animate-ping"
+            src="/tapify.svg"
+            alt="Logo"
+            width={80}
+            height={80}
+          />
         </div>
       </>
     );
@@ -217,7 +231,32 @@ export default function Page() {
   if (voucherStatus === 3) {
     return (
       <>
-        <h2 className="font-bold text-lg"> Token</h2>
+        <h2 className="font-bold text-lg">Redeem Token</h2>
+        <div className="flex flex-row justify-start items-center gap-2">
+          <Image
+            className="bg-white p-2 rounded-lg"
+            src={
+              getChainById(voucherMetaData!.chainId)?.tokens[1].icon ||
+              "/token.png"
+            }
+            alt="Logo"
+            width={40}
+            height={40}
+          />
+          <input
+            disabled
+            className="bg-border px-4 py-2 w-full rounded-lg"
+            type="text"
+            value={
+              voucherMetaData!.voucherDetails.spendLimit +
+              "  " +
+              getChainById(voucherMetaData!.chainId)?.tokens[1].name!
+            }
+          />
+        </div>
+        <button className="bg-primary text-white text-sm px-6 py-2.5 font-bold rounded-lg flex flex-row justify-center items-center gap-1">
+          {isLoading ? "Checking..." : mintStatus ? "Claming..." : "Claim"}
+        </button>
       </>
     );
   }
@@ -248,8 +287,14 @@ export default function Page() {
       <div className="px-4 py-6 flex flex-col gap-6">
         <BanIcon />
         <p className="font-bold text-lg w-full text-center">
-          You have failed to claim your voucher!
+          The NFC voucher has been already redeemed or empty.
         </p>
+        <Link
+          href={`/home?voucher=${voucherSecret}`}
+          className="bg-primary text-white text-sm px-6 py-2.5 font-bold rounded-lg flex flex-row justify-center items-center gap-1"
+        >
+          Create a new
+        </Link>
       </div>
     </>
   );

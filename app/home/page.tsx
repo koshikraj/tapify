@@ -14,10 +14,9 @@ import {
   Ticket,
   Wallet,
 } from "lucide-react";
-import { Truncate } from "../utils/truncate";
+
 import CopyString from "../utils/CopyString";
 import { useEffect, useState } from "react";
-import crypto from "crypto";
 
 import { getSmartAccountClient } from "../lib/permissionless";
 import { privateKeyToAccount } from "viem/accounts";
@@ -59,9 +58,20 @@ import { getJsonRpcProvider } from "../lib/web3";
 import { getChainById } from "../lib/tokens";
 import { buildTransferToken, fixDecimal, getTokenBalance } from "../lib/utils";
 import Loading from "../components/Loading";
-import { addVoucherData, getVoucherData, getVoucherDataById, updateVoucherData } from "../lib/voucher-middleware";
-import { decryptMetadata, deriveId, encryptMetadata, VoucherMetadata } from "../lib/encryption";
+import {
+  addVoucherData,
+  getVoucherData,
+  getVoucherDataById,
+  updateVoucherData,
+} from "../lib/voucher-middleware";
+import {
+  decryptMetadata,
+  deriveId,
+  encryptMetadata,
+  VoucherMetadata,
+} from "../lib/encryption";
 import useAccountStore from "../store/voucher/voucher.store";
+import { Truncate } from "../utils/truncate";
 
 export default function Page() {
   const router = useRouter();
@@ -83,14 +93,15 @@ export default function Page() {
   const [enabling, setEnabling] = useState(false);
   const [sessionSecretKey, setSessionSecretKey] = useState<Hex>("0x");
   const [tokenDetails, setTokenDetails]: any = useState([]);
-  const [voucherType, setVoucherType] = useState<"basename"|"token"|"subscription">("basename");
+  const [voucherType, setVoucherType] = useState<
+    "basename" | "token" | "subscription"
+  >("basename");
   const [tokenAmount, setTokenAmount] = useState<string>("0");
 
-  console.log(voucherType)
+  console.log(voucherType);
 
   // Voucher claim states
-  const [ voucherMetaData, setVoucherMetaData ] = useState<VoucherMetadata>();
-
+  const [voucherMetaData, setVoucherMetaData] = useState<VoucherMetadata>();
 
   const chainId = 8453;
   // const chainId = 97
@@ -101,18 +112,15 @@ export default function Page() {
     (async () => {
       const account = await (primaryWallet as any)?.getWalletClient();
 
-
-
       try {
-      const voucherData = await getVoucherDataById(deriveId(voucherSecret))
-      console.log(voucherData[0].encrypted_metadata)
-      setVoucherMetaData(decryptMetadata(voucherData[0].encrypted_metadata, voucherSecret))
-
+        const voucherData = await getVoucherDataById(deriveId(voucherSecret));
+        console.log(voucherData[0].encrypted_metadata);
+        setVoucherMetaData(
+          decryptMetadata(voucherData[0].encrypted_metadata, voucherSecret)
+        );
+      } catch {
+        console.log("Invalid Voucher");
       }
-      catch {
-        console.log("Invalid Voucher")
-      }
-
 
       console.log(await getVoucherData());
 
@@ -154,47 +162,40 @@ export default function Page() {
     type: "basename" | "token" | "subscription" = "basename"
   ) {
     let call: Transaction;
-    
-    const provider = await getJsonRpcProvider(
-      chainId.toString()
-    );
+
+    const provider = await getJsonRpcProvider(chainId.toString());
     setShowTx(true);
-    const sessionOwner = getSessionValidatorAccount(
-      sessionSecretKey as Hex
-    );
+    const sessionOwner = getSessionValidatorAccount(sessionSecretKey as Hex);
     console.log(sessionOwner.address);
 
     // if (type == "subscription" || type == "token") {
-      call = {
-        to: getChainById(chainId)?.tokens[1].address!,
-        value: BigInt(0),
-        // Update to and amount
-        data: (await buildTransferToken(
-          getChainById(chainId)?.tokens[1].address!,
-          "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
-          parseUnits(
-            "2",
-            getChainById(chainId)?.tokens[1].decimals
-          ),
-          provider
-        )) as Hex,
-      };
-    // } 
-        // setShowTx(true);
+    call = {
+      to: getChainById(chainId)?.tokens[1].address!,
+      value: BigInt(0),
+      // Update to and amount
+      data: (await buildTransferToken(
+        getChainById(chainId)?.tokens[1].address!,
+        "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+        parseUnits("2", getChainById(chainId)?.tokens[1].decimals),
+        provider
+      )) as Hex,
+    };
+    // }
+    // setShowTx(true);
 
-        const txHash = await sendSessionTransaction(
-          chainId.toString(),
-          [call],
-          walletAddress as Hex,
-          sessionOwner
-        );
-    
-        setShowTx(false);
-      }
-    
+    const txHash = await sendSessionTransaction(
+      chainId.toString(),
+      [call],
+      walletAddress as Hex,
+      sessionOwner
+    );
 
+    setShowTx(false);
+  }
 
-  async function enableSmartSession(type: "basename" | "token" | "subscription" = "basename") {
+  async function enableSmartSession(
+    type: "basename" | "token" | "subscription" = "basename"
+  ) {
     const calls: Transaction[] = [];
     const buildSmartSession = await buildSmartSessionModule(
       chainId.toString(),
@@ -225,10 +226,15 @@ export default function Page() {
     // console.log(allCalls);
     const txHash = await sendTransaction(chainId.toString(), calls, account);
 
-    const encryptedData = encryptMetadata({creatorAddress: walletAddress, voucherDetails: { type: voucherType, spendLimit: tokenAmount }, sessionSecretKey: sessionSecretKey, chainId}, voucherSecret)
-
-    await addVoucherData(encryptedData.voucherId, encryptedData.encryptedMetadata, encryptedData.status)
-    
+    const encryptedData = encryptMetadata(
+      {
+        creatorAddress: walletAddress,
+        voucherDetails: { type: voucherType, spendLimit: tokenAmount },
+        sessionSecretKey: sessionSecretKey,
+        chainId,
+      },
+      voucherSecret
+    );
 
     await addVoucherData(
       encryptedData.voucherId,
@@ -236,11 +242,16 @@ export default function Page() {
       encryptedData.status
     );
 
+    await addVoucherData(
+      encryptedData.voucherId,
+      encryptedData.encryptedMetadata,
+      encryptedData.status
+    );
+    setShowAutoSwap(false);
     console.log(
       decryptMetadata(encryptedData.encryptedMetadata, voucherSecret)
     );
   }
-
 
   useEffect(() => {
     (async () => {
@@ -490,7 +501,7 @@ export default function Page() {
                 <label className="text-sm" htmlFor="">
                   Range of Letters
                 </label>
-                <Select defaultValue="0">
+                <Select defaultValue="2">
                   <SelectTrigger className="w-full bg-border focus:outline-none focus:ring-0">
                     <SelectValue placeholder="Vocher Type" />
                   </SelectTrigger>
@@ -540,7 +551,9 @@ export default function Page() {
                   className="bg-border border-input px-3 py-2 rounded-md"
                   type="text"
                   value={tokenAmount}
-                  onChange={(e)=>{ setTokenAmount(e.target.value)}}
+                  onChange={(e) => {
+                    setTokenAmount(e.target.value);
+                  }}
                   placeholder="Enter USDC amount"
                 />
               </div>
@@ -593,7 +606,11 @@ export default function Page() {
             )}
             <div className="flex flex-row justify-between items-center rounded-md p-4 text-white bg-border text-sm">
               <h3>Total Amount</h3>
-              <h4 className="font-bold">0.001 ETH</h4>
+              <h4 className="font-bold">
+                {voucherType === "token"
+                  ? tokenAmount + " " + getChainById(chainId)?.tokens[1].name!
+                  : "0.0001 ETH"}{" "}
+              </h4>
             </div>
 
             <button
@@ -602,50 +619,11 @@ export default function Page() {
                 await enableSmartSession(voucherType);
                 setEnabling(false);
               }}
-              className="bg-red-200 text-red-600 flex flex-row justify-center items-center gap-4 w-full px-4 py-2.5 rounded-lg border-2 border-border font-semibold mt-2"
+              disabled={enabling}
+              className="bg-primary text-white text-sm px-6 py-2.5 font-bold rounded-lg flex flex-row justify-center items-center gap-1 disabled:opacity-50 mt-2"
             >
               {enabling ? <Loading /> : "Create Voucher"}
             </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={showTx} onOpenChange={setShowTx}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Incoming Transaction</DialogTitle>
-            <DialogDescription>
-              We are swapping your incoming token to desired token.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-3 place-items-center gap-4 text-white text-center my-4">
-            <div className="flex flex-col justify-center items-center gap-2">
-              <div className="bg-white rounded-full flex flex-row justify-center items-center gap-2">
-                <Image
-                  src={tokenDetails[fromToken]?.icon}
-                  alt={tokenDetails[fromToken]?.name}
-                  width={60}
-                  height={60}
-                />
-              </div>
-              <h3 className="font-bold">{Tokens[0].symbol}</h3>
-            </div>
-            <div className="flex flex-col justify-center items-center gap-4">
-              <Image src="/tapify.gif" alt="Pacman" width={40} height={40} />
-              <Link href={"/"} target="_blank" className="underline text-sm">
-                View on Blockscan
-              </Link>
-            </div>
-            <div className="flex flex-col justify-center items-center gap-2">
-              <div className="bg-white rounded-full flex flex-row justify-center items-center gap-2">
-                <Image
-                  src={tokenDetails[toToken]?.icon}
-                  alt={tokenDetails[toToken]?.name}
-                  width={60}
-                  height={60}
-                />
-              </div>
-              <h3 className="font-bold">{Tokens[1].symbol}</h3>
-            </div>
           </div>
         </DialogContent>
       </Dialog>
