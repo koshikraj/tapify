@@ -11,8 +11,7 @@ import { getChainById } from "../lib/tokens";
 import { buildTransferToken } from "../lib/utils";
 import { parseUnits } from "ethers";
 
-export default function Page({ params }: { params: { secret: string } }) {
-  const secret = params.secret;
+export default function Page() {
   
   const searchParams = useSearchParams();
   const voucherSecret = searchParams.get("voucher") ?? "";
@@ -43,7 +42,7 @@ export default function Page({ params }: { params: { secret: string } }) {
     })();
   }, []);
 
-  async function useSmartSession(type: 'basename' | 'token' | 'subscription' = 'basename') {
+  async function triggerSmartSession(type: 'basename' | 'token' | 'subscription' = 'basename') {
 
     let call: Transaction;
     const provider = await getJsonRpcProvider(voucherMetaData!.chainId.toString());
@@ -91,7 +90,7 @@ export default function Page({ params }: { params: { secret: string } }) {
   if (voucherStatus === 2) {
     return (
       <>
-        <h2 className="font-bold text-lg" onClick={ ()=> { useSmartSession();}}>Claim Basename</h2>
+        <h2 className="font-bold text-lg" onClick={ ()=> { triggerSmartSession();}}>Claim Basename</h2>
         <div>
           <input
             type="text"
