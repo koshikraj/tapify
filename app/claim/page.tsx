@@ -17,11 +17,15 @@ import { getChainById } from "../lib/tokens";
 import { buildTransferToken } from "../lib/utils";
 import { parseUnits } from "ethers";
 import { BadgeCheck, BadgeX, Check, X } from "lucide-react";
+import { CircleCheckIcon } from "../components/Icons/CircleCheckIcon";
+import Confetti from "react-confetti";
+import { useWindowSize } from "@react-hook/window-size";
+import { BanIcon } from "../components/Icons/BanIcon";
 
 export default function Page() {
   const searchParams = useSearchParams();
   const voucherSecret = searchParams.get("voucher") ?? "";
-
+  const [width, height] = useWindowSize();
   // Voucher claim states
   const [voucherMetaData, setVoucherMetaData] = useState<VoucherMetadata>();
   const [voucherData, setVoucherData] = useState<any>();
@@ -32,6 +36,7 @@ export default function Page() {
 
   const [isNameAvail, setIsNameAvail] = useState<boolean>(false);
   const [mintStatus, setMintStatus] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   console.log(voucherData)
   useEffect(() => {
@@ -137,12 +142,18 @@ export default function Page() {
                 value={baseName}
                 onChange={async (event) => {
                   setBaseName(event.target.value.toLowerCase());
+                  if (event.target.value.length <= 9) {
+                    setIsNameAvail(false);
+                    return;
+                  }
+                  setIsLoading(true);
                   const isAvailable = await isNameAvailable(
                     voucherMetaData!.chainId.toString(),
                     event.target.value
                   );
 
                   setIsNameAvail(isAvailable);
+                  setIsLoading(false);
                 }}
                 className="bg-transparent w-full"
               />
@@ -157,7 +168,7 @@ export default function Page() {
                 </div>
               </div>
             </div>
-            {baseName.length <= 9 && (
+            {baseName.length <= 9 && baseName.length > 0 && (
               <div className="text-xs text-red-600 px-3">
                 Basename must be at least 9 characters
               </div>
@@ -166,7 +177,7 @@ export default function Page() {
           {isNameAvail && baseName.length > 9 && (
             <input
               type="text"
-              placeholder="Owner Address"
+              placeholder="Enter owner address"
               className="w-full bg-border border-input px-3 py-2 rounded-md"
               onChange={(event) => {
                 setOwnerAddress(event.target.value);
@@ -185,7 +196,7 @@ export default function Page() {
               triggerSmartSession();
             }}
           >
-            {mintStatus ? "Claming..." : "Claim"}
+            {isLoading ? "Checking..." : mintStatus ? "Claming..." : "Claim"}
           </button>
         </div>
       </>
@@ -195,21 +206,40 @@ export default function Page() {
   if (voucherStatus === 3) {
     return (
       <>
-        <h2 className="font-bold text-lg"> Claim Claim Data</h2>
+        <h2 className="font-bold text-lg"> Profile</h2>
       </>
     );
   }
 
   if (voucherStatus === 4) {
     return (
-      <>
-        <h2 className="font-bold text-lg"> Claim Success</h2>
-      </>
+      <div className="px-4 py-6 flex flex-col gap-6">
+        <CircleCheckIcon />
+        <p className="font-bold text-lg w-full text-center">
+          You have successfully claimed your voucher!
+        </p>
+        <Confetti
+          width={width}
+          height={height}
+          recycle={true}
+          numberOfPieces={100}
+          initialVelocityX={1}
+          initialVelocityY={2}
+          gravity={0.1}
+          tweenDuration={2000}
+          colors={["#a855f7", "#efc94c", "#ff8a65", "#f7b731"]}
+        />
+      </div>
     );
   }
   return (
     <>
-      <h2 className="font-bold text-lg"> Claim Failed</h2>
+      <div className="px-4 py-6 flex flex-col gap-6">
+        <BanIcon />
+        <p className="font-bold text-lg w-full text-center">
+          You have failed to claim your voucher!
+        </p>
+      </div>
     </>
   );
 }
