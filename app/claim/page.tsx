@@ -34,6 +34,7 @@ export default function Page() {
 
   const [isNameAvail, setIsNameAvail] = useState<boolean>(false);
   const [mintStatus, setMintStatus] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
@@ -126,12 +127,18 @@ export default function Page() {
                 value={baseName}
                 onChange={async (event) => {
                   setBaseName(event.target.value.toLowerCase());
+                  if (event.target.value.length <= 9) {
+                    setIsNameAvail(false);
+                    return;
+                  }
+                  setIsLoading(true);
                   const isAvailable = await isNameAvailable(
                     voucherMetaData!.chainId.toString(),
                     event.target.value
                   );
 
                   setIsNameAvail(isAvailable);
+                  setIsLoading(false);
                 }}
                 className="bg-transparent w-full"
               />
@@ -146,7 +153,7 @@ export default function Page() {
                 </div>
               </div>
             </div>
-            {baseName.length <= 9 && (
+            {baseName.length <= 9 && baseName.length > 0 && (
               <div className="text-xs text-red-600 px-3">
                 Basename must be at least 9 characters
               </div>
@@ -155,7 +162,7 @@ export default function Page() {
           {isNameAvail && baseName.length > 9 && (
             <input
               type="text"
-              placeholder="Owner Address"
+              placeholder="Enter owner address"
               className="w-full bg-border border-input px-3 py-2 rounded-md"
               onChange={(event) => {
                 setOwnerAddress(event.target.value);
@@ -174,7 +181,7 @@ export default function Page() {
               triggerSmartSession();
             }}
           >
-            {mintStatus ? "Claming..." : "Claim"}
+            {isLoading ? "Checking..." : mintStatus ? "Claming..." : "Claim"}
           </button>
         </div>
       </>
