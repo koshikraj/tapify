@@ -59,8 +59,18 @@ import { getJsonRpcProvider } from "../lib/web3";
 import { getChainById } from "../lib/tokens";
 import { buildTransferToken, fixDecimal, getTokenBalance } from "../lib/utils";
 import Loading from "../components/Loading";
-import { addVoucherData, getVoucherData, getVoucherDataById, updateVoucherData } from "../lib/voucher-middleware";
-import { decryptMetadata, deriveId, encryptMetadata, VoucherMetadata } from "../lib/encryption";
+import {
+  addVoucherData,
+  getVoucherData,
+  getVoucherDataById,
+  updateVoucherData,
+} from "../lib/voucher-middleware";
+import {
+  decryptMetadata,
+  deriveId,
+  encryptMetadata,
+  VoucherMetadata,
+} from "../lib/encryption";
 import useAccountStore from "../store/voucher/voucher.store";
 
 export default function Page() {
@@ -85,10 +95,8 @@ export default function Page() {
   const [tokenDetails, setTokenDetails]: any = useState([]);
   const [voucherType, setVoucherType] = useState(0);
 
-
   // Voucher claim states
-  const [ voucherMetaData, setVoucherMetaData ] = useState<VoucherMetadata>();
-
+  const [voucherMetaData, setVoucherMetaData] = useState<VoucherMetadata>();
 
   const chainId = 84532;
   // const chainId = 137
@@ -99,18 +107,15 @@ export default function Page() {
     (async () => {
       const account = await (primaryWallet as any)?.getWalletClient();
 
-
-
       try {
-      const voucherData = await getVoucherDataById(deriveId(voucherSecret))
-      console.log(voucherData[0].encrypted_metadata)
-      setVoucherMetaData(decryptMetadata(voucherData[0].encrypted_metadata, voucherSecret))
-
+        const voucherData = await getVoucherDataById(deriveId(voucherSecret));
+        console.log(voucherData[0].encrypted_metadata);
+        setVoucherMetaData(
+          decryptMetadata(voucherData[0].encrypted_metadata, voucherSecret)
+        );
+      } catch {
+        console.log("Invalid Voucher");
       }
-      catch {
-        console.log("Invalid Voucher")
-      }
-
 
       console.log(await getVoucherData());
 
@@ -179,10 +184,21 @@ export default function Page() {
     // console.log(allCalls);
     const txHash = await sendTransaction(chainId.toString(), calls, account);
 
-    const encryptedData = encryptMetadata({creatorAddress: walletAddress, voucherDetails: { type: "basename"}, sessionSecretKey: sessionSecretKey, chainId}, voucherSecret)
+    const encryptedData = encryptMetadata(
+      {
+        creatorAddress: walletAddress,
+        voucherDetails: { type: "basename" },
+        sessionSecretKey: sessionSecretKey,
+        chainId,
+      },
+      voucherSecret
+    );
 
-    await addVoucherData(encryptedData.voucherId, encryptedData.encryptedMetadata, encryptedData.status)
-    
+    await addVoucherData(
+      encryptedData.voucherId,
+      encryptedData.encryptedMetadata,
+      encryptedData.status
+    );
 
     await addVoucherData(
       encryptedData.voucherId,
@@ -194,9 +210,6 @@ export default function Page() {
       decryptMetadata(encryptedData.encryptedMetadata, voucherSecret)
     );
   }
-
-
-
 
   useEffect(() => {
     (async () => {
@@ -584,7 +597,13 @@ export default function Page() {
               <h3 className="font-bold">{Tokens[0].symbol}</h3>
             </div>
             <div className="flex flex-col justify-center items-center gap-4">
-              <Image src="/tapify.gif" alt="Pacman" width={40} height={40} />
+              <Image
+                className="animate-ping"
+                src="/tapify.svg"
+                alt="Pacman"
+                width={40}
+                height={40}
+              />
               <Link href={"/"} target="_blank" className="underline text-sm">
                 View on Blockscan
               </Link>

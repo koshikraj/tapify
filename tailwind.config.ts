@@ -9,6 +9,18 @@ export default {
   ],
   theme: {
     extend: {
+      keyframes: {
+        ping: {
+          "75%, 100%": {
+            transform: "scale(1.2)", // Adjust scaling here (default is 2)
+            opacity: "0",
+          },
+        },
+      },
+      animation: {
+        ping: "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite", // Keep the rest as-is
+      },
+
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -58,6 +70,6 @@ export default {
       },
     },
   },
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;

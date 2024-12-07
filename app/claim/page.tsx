@@ -108,7 +108,13 @@ export default function Page() {
       <>
         <h2 className="font-bold text-lg">Validating Voucher</h2>
         <div className="flex flex-col justify-center items-center gap-2">
-          <Image src="/tapify.gif" alt="Logo" width={80} height={80} />
+          <Image
+            className="animate-ping"
+            src="/tapify.svg"
+            alt="Logo"
+            width={80}
+            height={80}
+          />
         </div>
       </>
     );
