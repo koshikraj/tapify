@@ -102,7 +102,6 @@ export default function Page() {
 
   // const chainId = 8453;
   const chainId = 97
-
   console.log(voucherSecret);
 
   useEffect(() => {
