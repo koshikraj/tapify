@@ -102,7 +102,6 @@ export default function Page() {
 
   const chainId = 8453;
   // const chainId = 97
-
   console.log(voucherSecret);
 
   useEffect(() => {
@@ -351,36 +350,38 @@ export default function Page() {
               </div>
             </TabsContent>
             <TabsContent
-              className="flex flex-col gap-4 mt-0 w-full"
+              className="flex flex-col flex-grow gap-4 mt-0 w-full"
               value="voucher"
             >
               <div className="flex flex-row justify-between items-center w-full">
                 <h2 className="font-bold text-lg">Vouchers</h2>
-                <button
-                  onClick={() => setShowAutoSwap(true)}
-                  className="bg-slate-500 text-white text-sm px-2 py-1 rounded-lg flex flex-row justify-center items-center gap-1"
-                >
-                  <Plus size={12} /> Create Voucher
-                </button>
               </div>
-              <div className="flex flex-col gap-0">
+              <div className="flex flex-col flex-grow h-full gap-0">
                 <div className="flex flex-row justify-between items-center border-b border-border pb-2 text-sm font-bold">
                   <h3>Type</h3>
                   <h3>Claimed</h3>
                 </div>
-                <div className="flex flex-col flex-grow overflow-y-scroll divide-y divider-slate-500">
-                  <div className="flex flex-row justify-between items-center py-2">
-                    <div className="flex flex-row justify-start items-center gap-2">
-                      <Image
-                        src={"/token.png"}
-                        alt="Logo"
-                        width={25}
-                        height={25}
-                      />
-                      <h4 className="font-medium">Token</h4>
+                <div className="flex flex-col flex-grow justify-start items-center w-full">
+                  <div className="flex flex-col flex-grow overflow-y-scroll divide-y divider-slate-500 w-full">
+                    <div className="flex flex-row justify-between items-center py-2">
+                      <div className="flex flex-row justify-start items-center gap-2">
+                        <Image
+                          src={"/token.png"}
+                          alt="Logo"
+                          width={25}
+                          height={25}
+                        />
+                        <h4 className="font-medium">Token</h4>
+                      </div>
+                      <h5>10</h5>
                     </div>
-                    <h5>10</h5>
                   </div>
+                  <button
+                    onClick={() => setShowAutoSwap(true)}
+                    className="bg-primary text-black text-sm px-6 py-2.5 font-bold rounded-lg flex flex-row justify-center items-center gap-1 mt-2"
+                  >
+                    <Plus size={16} /> Create Voucher
+                  </button>
                 </div>
               </div>
             </TabsContent>

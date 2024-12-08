@@ -198,14 +198,14 @@ const gasChainsTokens: GasChainType[] = [
         name: "BNB",
         fullname: "BNB",
         address: "0x0000000000000000000000000000000000000000",
-        icon: "/chains/ethereum.webp",
+        icon: "/tokens/bnb.svg",
         decimals: 18,
       },
       {
         name: "BUSD",
         fullname: "BUSD",
         address: "0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee",
-        icon: "/tokens/usdc.svg",
+        icon: "/tokens/busd.svg",
         decimals: 18,
       },
 
