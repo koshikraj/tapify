@@ -43,8 +43,8 @@ export default function Page() {
   const [mintStatus, setMintStatus] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [voucherType, setVoucherType] = useState<
-  "basename" | "token" | "subscription"
->("basename");
+    "basename" | "token" | "subscription"
+  >("basename");
 
   useEffect(() => {
     (async () => {
@@ -62,9 +62,9 @@ export default function Page() {
 
           if (voucherMetaData!.voucherDetails.type == "basename") {
             setVoucherStatus(2);
-            setVoucherType("basename")
+            setVoucherType("basename");
           } else if (voucherMetaData!.voucherDetails.type == "token") {
-            setVoucherType("token")
+            setVoucherType("token");
             setVoucherStatus(3);
           }
         } else if (voucherData[0].status == "redeemed") {
@@ -103,7 +103,7 @@ export default function Page() {
         // Update to and amount
         data: (await buildTransferToken(
           getChainById(voucherMetaData!.chainId)?.tokens[1].address!,
-          "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+          ownerAddress,
           parseUnits(
             "1",
             getChainById(voucherMetaData!.chainId)?.tokens[1].decimals
@@ -259,9 +259,19 @@ export default function Page() {
             }
           />
         </div>
-        <button className="bg-primary text-white text-sm px-6 py-2.5 font-bold rounded-lg flex flex-row justify-center items-center gap-1"
-        onClick={()=> { triggerSmartSession(voucherType);
-        }}
+        <input
+          type="text"
+          placeholder="Enter owner address"
+          className="w-full bg-border border-input px-3 py-2 rounded-md"
+          onChange={(event) => {
+            setOwnerAddress(event.target.value);
+          }}
+        />
+        <button
+          className="bg-primary text-white text-sm px-6 py-2.5 font-bold rounded-lg flex flex-row justify-center items-center gap-1"
+          onClick={() => {
+            triggerSmartSession(voucherType);
+          }}
         >
           {isLoading ? "Checking..." : mintStatus ? "Claming..." : "Claim"}
         </button>
