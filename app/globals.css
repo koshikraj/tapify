@@ -79,3 +79,7 @@ input:focus {
   outline: none; /* Removes the browser default outline */
   box-shadow: none; /* Removes any box-shadow focus effects */
 }
+
+::-webkit-scrollbar {
+  display: none; /* Hides the scrollbar */
+}
