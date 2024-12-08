@@ -100,8 +100,8 @@ export default function Page() {
   // Voucher claim states
   const [voucherMetaData, setVoucherMetaData] = useState<VoucherMetadata>();
 
-  const chainId = 8453;
-  // const chainId = 97
+  // const chainId = 8453;
+  const chainId = 97
 
   console.log(voucherSecret);
 
