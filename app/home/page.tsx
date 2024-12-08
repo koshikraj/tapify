@@ -378,9 +378,9 @@ export default function Page() {
                   </div>
                   <button
                     onClick={() => setShowAutoSwap(true)}
-                    className="bg-slate-500 text-white text-sm px-2 py-1 rounded-lg flex flex-row justify-center items-center gap-1"
+                    className="bg-primary text-black text-sm px-6 py-2.5 font-bold rounded-lg flex flex-row justify-center items-center gap-1 mt-2"
                   >
-                    <Plus size={12} /> Create Voucher
+                    <Plus size={16} /> Create Voucher
                   </button>
                 </div>
               </div>
