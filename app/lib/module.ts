@@ -372,7 +372,7 @@ export const buildExecuteBaseNameVoucher = async (chainId: string, name: string,
     duration: BigInt(31536000), // One year in seconds
     resolver: resolverAddress, // Update for mainnet
     data: [], // Empty bytes array
-    reverseRecord: true
+    reverseRecord: false
   };
 
 
@@ -439,9 +439,6 @@ export const buildEnableSmartSession = async (chainId: string, validatorAddress:
 
         if(tokenLimits && type=="token") {
 
-          console.log("token")
-          console.log(tokenLimits)
-          
 
           const execCallSelector = toFunctionSelector({
             name: 'transfer',
@@ -462,6 +459,14 @@ export const buildEnableSmartSession = async (chainId: string, validatorAddress:
           actionTargetSelector: execCallSelector as Hex, // function selector to be used in the execution, in this case no function selector is used
           actionPolicies: [{policy: spendLimitPolicy as Hex, initData: spendingLimitsPolicy.initData}], 
         }
+
+        // smartSessionAction = {
+        //   actionTarget:  tokenLimits.token as Hex, // an address as the target of the session execution
+        //   actionTargetSelector: execCallSelector as Hex, // function selector to be used in the execution, in this case no function selector is used
+        //   actionPolicies: [{policy: sudoPolicy as Hex, initData: '0x' as Hex}], 
+        // }
+
+        console.log(smartSessionAction)
 
        }
        else {

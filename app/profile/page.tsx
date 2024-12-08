@@ -4,8 +4,15 @@ import Image from "next/image";
 import { ClipboardCopy, Copy, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import CopyString from "../utils/CopyString";
-import { Truncate } from "../utils/Truncate";
+import { Truncate } from "../utils/truncate";
+import { useSearchParams } from "next/navigation";
 export default function Page() {
+
+  const searchParams = useSearchParams();
+  const address = searchParams.get("address") ?? "";
+  const name = searchParams.get("name") ?? "";
+
+  
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-white w-full">
       <div className="fancy-box max-w-md w-full rounded-xl bg-card border-2 border-border p-4 flex flex-col gap-4">
@@ -22,7 +29,7 @@ export default function Page() {
             <div className="flex flex-col justify-center items-center">
               <div className="flex flex-row justify-center items-center gap-1">
                 <h2 className="font-semibold text-lg lowercase">
-                  Basename.base.eth
+                {name}.base.eth
                 </h2>
                 <Link href="/">
                   <ExternalLink size={16} />
@@ -30,10 +37,10 @@ export default function Page() {
               </div>
               <div className="flex flex-row justify-center items-center gap-2 opacity-80">
                 <h3 className="font-semibold text-sm">
-                  {Truncate("0x12345678900x1234567890", 20, "...")}
+                  {Truncate(address, 20, "...")}
                 </h3>
                 <CopyString
-                  copyText={"0x12345678900x1234567890"}
+                  copyText={address}
                   icon={<Copy size={16} />}
                 />
               </div>

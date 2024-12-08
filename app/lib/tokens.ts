@@ -137,7 +137,7 @@ const gasChainsTokens: GasChainType[] = [
         name: "ETH",
         fullname: "Ether",
         address: "0x0000000000000000000000000000000000000000",
-        icon: "/chains/ethereum.webp",
+        icon: "/tokens/ethereum.webp",
         decimals: 18,
       },
       {

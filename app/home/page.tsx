@@ -70,7 +70,7 @@ import {
   encryptMetadata,
   VoucherMetadata,
 } from "../lib/encryption";
-import { Truncate } from "../utils/Truncate";
+import { Truncate } from "../utils/truncate";
 
 export default function Page() {
   const router = useRouter();
@@ -96,8 +96,6 @@ export default function Page() {
     "basename" | "token" | "subscription"
   >("basename");
   const [tokenAmount, setTokenAmount] = useState<string>("0");
-
-  console.log(voucherType);
 
   // Voucher claim states
   const [voucherMetaData, setVoucherMetaData] = useState<VoucherMetadata>();
@@ -241,11 +239,6 @@ export default function Page() {
       encryptedData.status
     );
 
-    await addVoucherData(
-      encryptedData.voucherId,
-      encryptedData.encryptedMetadata,
-      encryptedData.status
-    );
     setShowAutoSwap(false);
     console.log(
       decryptMetadata(encryptedData.encryptedMetadata, voucherSecret)

@@ -42,8 +42,10 @@ export default function Page() {
   const [isNameAvail, setIsNameAvail] = useState<boolean>(false);
   const [mintStatus, setMintStatus] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [voucherType, setVoucherType] = useState<
+  "basename" | "token" | "subscription"
+>("basename");
 
-  console.log(voucherData);
   useEffect(() => {
     (async () => {
       try {
@@ -60,18 +62,21 @@ export default function Page() {
 
           if (voucherMetaData!.voucherDetails.type == "basename") {
             setVoucherStatus(2);
+            setVoucherType("basename")
           } else if (voucherMetaData!.voucherDetails.type == "token") {
-            console.log(voucherMetaData);
-            setVoucherStatus(5);
+            setVoucherType("token")
+            setVoucherStatus(3);
           }
         } else if (voucherData[0].status == "redeemed") {
           if (voucherMetaData!.voucherDetails.type == "basename") {
             router.push(
-              `/profile?address=${voucherData[0].details["data"]["address"]}`
+              `/profile?address=${voucherData[0].details["data"]["address"]}&name=${voucherData[0].details["data"]["name"]}`
             );
           }
+          setVoucherStatus(5);
         }
       } catch {
+        setVoucherStatus(5);
         console.log("Invalid Voucher");
       }
     })();
@@ -218,7 +223,7 @@ export default function Page() {
             }
             className="px-6 py-2.5 bg-primary text-white w-full rounded-md shadow-md disabled:opacity-50 font-bold"
             onClick={() => {
-              triggerSmartSession();
+              triggerSmartSession(voucherType);
             }}
           >
             {isLoading ? "Checking..." : mintStatus ? "Claming..." : "Claim"}
@@ -254,7 +259,10 @@ export default function Page() {
             }
           />
         </div>
-        <button className="bg-primary text-white text-sm px-6 py-2.5 font-bold rounded-lg flex flex-row justify-center items-center gap-1">
+        <button className="bg-primary text-white text-sm px-6 py-2.5 font-bold rounded-lg flex flex-row justify-center items-center gap-1"
+        onClick={()=> { triggerSmartSession(voucherType);
+        }}
+        >
           {isLoading ? "Checking..." : mintStatus ? "Claming..." : "Claim"}
         </button>
       </>
@@ -282,6 +290,7 @@ export default function Page() {
       </div>
     );
   }
+
   return (
     <>
       <div className="px-4 py-6 flex flex-col gap-6">
